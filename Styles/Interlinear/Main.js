@@ -122,18 +122,19 @@ function annotateWord(word) {
   }
 
   const english = word.getElementsByTagName('english')[0];
+  const transliteration = word.getElementsByTagName('transliteration')[0];
   const strongs = word.getElementsByTagName('strongs')[0];
   const sn = strongs.textContent;
 
-  let entry, links, prefix;
+  let entry, links, snLink;
   if (hebrew && typeof strongsHebrewDictionary === 'object') {
     entry = strongsHebrewDictionary['H'+sn];
     links = HEBREW_DICT_LINKS;
-    prefix = 'https://biblehub.com/hebrew';
+    snLink = strongsLinkHTML('H', sn);
   } else if (greek && typeof strongsGreekDictionary === 'object') {
     entry = strongsGreekDictionary['G'+sn];
     links = GREEK_DICT_LINKS;
-    prefix = 'https://biblehub.com/greek';
+    snLink = strongsLinkHTML('G', sn);
   }
 
   const label = createLangLabel(lang?.tagName, lang?.textContent);
@@ -153,10 +154,7 @@ function annotateWord(word) {
   });
 
   word.replaceChild(label, lang);
-
-  const snLinkHTML =
-        `<a xmlns="${XHTML_NS}" href="${prefix}/${sn}.htm">${sn}</a>`;
-  strongs.innerHTML = snLinkHTML;
+  strongs.innerHTML = snLink(sn);
 
   if (!entry) {
     return;
@@ -164,13 +162,47 @@ function annotateWord(word) {
 
   const sd = document.createElement('strongs-definition');
   const snDef = entry?.strongs_def || '';
-  sd.innerHTML =
-    `<a xmlns="${XHTML_NS}" href="${prefix}/${sn}.htm">${snDef}</a>`;
+  sd.innerHTML = snLink(snDef);
   word.insertBefore(sd, strongs.nextSibling);
+
+  const dr = document.createElement('derivation');
+  const drText = entry?.derivation || '';
+  dr.innerHTML = derivationHTML(drText);
+  word.insertBefore(dr, transliteration.nextSibling);
 
   const ed = document.createElement('english-definition');
   ed.appendChild(document.createTextNode(entry?.kjv_def || ''));
   word.insertBefore(ed, english.nextSibling);
+}
+
+function strongsLinkHTML(lang, sn) {
+  let prefix;
+  if (lang === 'H') {
+    prefix = 'https://biblehub.com/hebrew';
+  } else if (lang === 'G') {
+    prefix = 'https://biblehub.com/greek';
+  }
+  return (body) => {
+    if (!prefix) return body;
+    return `<a xmlns="${XHTML_NS}" href="${prefix}/${sn}.htm">${body}</a>`;
+  }
+}
+
+function derivationHTML(text) {
+  return text.replace(/\b([HG])(\d+)(\s+\(.*?\))?/g,
+    (unused_match, lang, sn, unused_trail) => {
+      let entry;
+      if (lang === 'H') {
+        entry = strongsHebrewDictionary['H'+sn];
+      } else {
+        entry = strongsGreekDictionary['G'+sn];
+      }
+      const snLink = strongsLinkHTML(lang, sn);
+      const lemma = entry?.lemma || '';
+      const xlit = entry?.xlit || entry?.translit || '';
+      return `${snLink(lang+sn)} (${lemma} - ${xlit}})`;
+    }
+  );
 }
 
 function addStrongsLinksAndDefinitions(words) {

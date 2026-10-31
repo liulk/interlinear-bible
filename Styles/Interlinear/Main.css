@@ -117,7 +117,7 @@ pos {
     color: grey;
 }
 
-parse, strongs-definition, english-definition, chinese-definition {
+parse, strongs-definition, english-definition, chinese-definition, derivation {
     direction: ltr;
     visibility: hidden;
     position: absolute;
@@ -154,6 +154,14 @@ pos:hover + parse, parse:hover {
 
 transliteration {
     color: steelblue;
+}
+
+transliteration:hover + derivation, derivation:hover {
+    visibility: visible;
+}
+
+derivation {
+    margin-top: -2.5lh;
 }
 
 hebrew, greek {
