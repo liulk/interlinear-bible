@@ -200,7 +200,7 @@ function derivationHTML(text) {
       const snLink = strongsLinkHTML(lang, sn);
       const lemma = entry?.lemma || '';
       const xlit = entry?.xlit || entry?.translit || '';
-      return `${snLink(lang+sn)} (${lemma} - ${xlit}})`;
+      return `${snLink(lang+sn)} (${lemma} - ${xlit})`;
     }
   );
 }
